@@ -4,7 +4,7 @@ exports.up = function (knex) {
     table.string('email', 255).unique().notNullable();
     table.string('password', 72).notNullable();
     table.string('name', 255);
-    table.timestamps(true, true);
+    table.timestamp('created_at').defaultTo(knex.fn.now());
   });
 };
 
