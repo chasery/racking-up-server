@@ -24,7 +24,18 @@ authRouter.post('/login', jsonBodyParser, (req, res, next) => {
         });
       }
 
-      res.send('ok');
+      return AuthService.comparePasswords(
+        loginUser.password,
+        dbUser.password
+      ).then((compareMatch) => {
+        if (!compareMatch) {
+          return res.status(400).json({
+            error: 'Invalid email or password',
+          });
+        }
+
+        return res.send('ok');
+      });
     })
     .catch(next);
 });

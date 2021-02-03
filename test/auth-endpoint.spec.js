@@ -18,22 +18,14 @@ describe('Auth Endpoints', () => {
     app.set('db', db);
   });
 
-  before('Clean users table', () => {
-    helpers.cleanTable(db);
-  });
+  before('Clean users table', () => helpers.cleanTable(db));
 
-  afterEach('Clean users table', () => {
-    helpers.cleanTable(db);
-  });
+  afterEach('Clean users table', () => helpers.cleanTable(db));
 
-  after('Destroy db connection', () => {
-    db.destroy();
-  });
+  after('Destroy db connection', () => db.destroy());
 
   describe('POST /api/auth/login', () => {
-    beforeEach('Insert users', () => {
-      helpers.seedUsers(db, testUsers);
-    });
+    beforeEach('Insert users', () => helpers.seedUsers(db, testUsers));
 
     const requiredFields = ['email', 'password'];
 
@@ -56,15 +48,29 @@ describe('Auth Endpoints', () => {
     });
 
     it("responds with 400 'Invalid email or password' when bad email", () => {
-      const invalidUser = {
+      const invalidCredentials = {
         email: 'bad@email.com',
+        password: testUser.password,
+      };
+
+      return supertest(app)
+        .post('/api/auth/login')
+        .send(invalidCredentials)
+        .expect(400, { error: 'Invalid email or password' });
+    });
+
+    it("responds with 400 'Invalid email or password' when bad password", () => {
+      const invalidCredentials = {
+        email: testUser.email,
         password: 'bad-password',
       };
 
       return supertest(app)
         .post('/api/auth/login')
-        .send(invalidUser)
+        .send(invalidCredentials)
         .expect(400, { error: 'Invalid email or password' });
     });
+
+    it(`responds 200 and JWT auth token using secret when valid credentials`, () => {});
   });
 });

@@ -8,18 +8,21 @@ function makeUsersArray() {
       email: 'jim.halpert@gmail.com',
       password: 'password',
       name: 'Jim',
+      created_at: '2021-02-03 10:20:43',
     },
     {
       id: 2,
       email: 'worldsbestboss@aol.com',
       password: 'test-password',
       name: 'Michael Scott',
+      created_at: '2021-02-03 10:20:43',
     },
     {
       id: 3,
       email: 'pambeasley2k@gmail.com',
       password: 'this-password',
       name: 'Pamlette',
+      created_at: '2021-02-03 10:20:43',
     },
   ];
 }
