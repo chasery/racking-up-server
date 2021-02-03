@@ -1,13 +1,13 @@
 exports.up = function (knex) {
-  return knex.schema.createTable("users", function (table) {
-    table.increments("id");
-    table.string("email", 255).notNullable();
-    table.string("password", 72).notNullable();
-    table.string("name", 255);
-    table.datetime("created_date").notNullable();
+  return knex.schema.createTable('ru_users', function (table) {
+    table.increments('id');
+    table.string('email', 255).unique().notNullable();
+    table.string('password', 72).notNullable();
+    table.string('name', 255);
+    table.timestamps(true, true);
   });
 };
 
 exports.down = function (knex) {
-  return knex.schema.dropTable("users");
+  return knex.schema.dropTable('ru_users');
 };
