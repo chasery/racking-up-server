@@ -34,7 +34,12 @@ authRouter.post('/login', jsonBodyParser, (req, res, next) => {
           });
         }
 
-        return res.send('ok');
+        const subject = dbUser.email;
+        const payload = { id: dbUser.id };
+
+        res.send({
+          authToken: AuthService.createJWT(subject, payload),
+        });
       });
     })
     .catch(next);
