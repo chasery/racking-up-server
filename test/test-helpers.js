@@ -55,6 +55,7 @@ function cleanTable(db) {
     trx
       .raw(
         `TRUNCATE
+        ru_racks,
         ru_users
     `
       )
