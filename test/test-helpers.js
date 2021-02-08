@@ -8,29 +8,93 @@ function makeUsersArray() {
       email: 'jim.halpert@gmail.com',
       password: 'password',
       name: 'Jim',
-      created_at: '2021-02-03 10:20:43',
+      created_at: new Date('2029-01-22T16:28:32.615Z'),
     },
     {
       id: 2,
       email: 'worldsbestboss@aol.com',
       password: 'test-password',
       name: 'Michael Scott',
-      created_at: '2021-02-03 10:20:43',
+      created_at: new Date('2029-01-22T16:28:32.615Z'),
     },
     {
       id: 3,
       email: 'pambeasley2k@gmail.com',
       password: 'this-password',
       name: 'Pamlette',
-      created_at: '2021-02-03 10:20:43',
+      created_at: new Date('2029-01-22T16:28:32.615Z'),
     },
   ];
 }
 
+function makeRacksArray() {
+  return [
+    {
+      rack_id: 1,
+      rack_name: 'Office Wear',
+      user_id: 1,
+      created_at: new Date('2029-01-22T16:28:32.615Z'),
+    },
+    {
+      rack_id: 2,
+      rack_name: "Meredith's Run",
+      user_id: 1,
+      created_at: new Date('2029-01-22T16:28:32.615Z'),
+    },
+    {
+      rack_id: 3,
+      rack_name: "Magician's Outfit",
+      user_id: 2,
+      created_at: new Date('2029-01-22T16:28:32.615Z'),
+    },
+    {
+      rack_id: 4,
+      rack_name: 'Waterfall Wedding Wear',
+      user_id: 3,
+      created_at: new Date('2029-01-22T16:28:32.615Z'),
+    },
+    {
+      rack_id: 5,
+      rack_name: 'Art School',
+      user_id: 3,
+      created_at: new Date('2029-01-22T16:28:32.615Z'),
+    },
+  ];
+}
+
+function makeExpectedRacks(user, racks) {
+  return racks
+    .filter((rack) => rack.user_id === user.id)
+    .map((rack) => ({
+      rack_id: rack.rack_id,
+      rack_name: rack.rack_name,
+      user_id: rack.user_id,
+      created_at: rack.created_at.toISOString(),
+    }));
+}
+
+function makeMaliciousRack(user) {
+  const maliciousRack = {
+    rack_id: 911,
+    rack_name: `Naughty naughty very naughty <script>alert("xss");</script> Bad image <img src="https://url.to.file.which/does-not.exist" onerror="alert(document.cookie);">. But not <strong>all</strong> bad.`,
+    user_id: user.id,
+    created_at: new Date(),
+  };
+  const expectedRack = {
+    ...makeExpectedRack([user], maliciousRack),
+    rack_name: `Naughty naughty very naughty &lt;script&gt;alert("xss");&lt;/script&gt; Bad image <img src="https://url.to.file.which/does-not.exist">. But not <strong>all</strong> bad.`,
+  };
+  return {
+    maliciousRack,
+    expectedRack,
+  };
+}
+
 function makeRacksFixtures() {
   const testUsers = makeUsersArray();
+  const testRacks = makeRacksArray();
 
-  return { testUsers };
+  return { testUsers, testRacks };
 }
 
 function seedUsers(db, users) {
@@ -48,6 +112,18 @@ function seedUsers(db, users) {
         users[users.length - 1].id,
       ])
     );
+}
+
+function seedRacksTables(db, users, racks = []) {
+  // use a transaction to group the queries and auto rollback on any failure
+  return db.transaction(async (trx) => {
+    await seedUsers(trx, users);
+    await trx.into('ru_racks').insert(racks);
+    // update the auto sequence to match the forced id values
+    await trx.raw(`SELECT setval('ru_racks_rack_id_seq', ?)`, [
+      racks[racks.length - 1].rack_id,
+    ]);
+  });
 }
 
 function cleanTable(db) {
@@ -78,8 +154,12 @@ function makeAuthHeader(user, secret = process.env.JWT_SECRET) {
 
 module.exports = {
   makeUsersArray,
+  makeRacksArray,
+  makeExpectedRacks,
+  makeMaliciousRack,
   makeRacksFixtures,
   seedUsers,
+  seedRacksTables,
   cleanTable,
   makeAuthHeader,
 };
