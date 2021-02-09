@@ -31,14 +31,19 @@ describe('Protected endpoints', function () {
       method: supertest(app).post,
     },
     {
-      name: 'POST /api/racks',
+      name: 'GET /api/racks',
       path: '/api/racks',
       method: supertest(app).get,
     },
     {
-      name: 'POST /api/racks/:rack_id',
+      name: 'GET /api/racks/:rack_id',
       path: '/api/racks/1',
       method: supertest(app).get,
+    },
+    {
+      name: 'POST /api/racks',
+      path: '/api/racks',
+      method: supertest(app).post,
     },
   ];
 

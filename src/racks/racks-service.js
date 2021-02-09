@@ -9,6 +9,14 @@ const RacksService = {
       .where('rack_id', rackId)
       .first();
   },
+  insertRack(db, userId, newRack) {
+    return db
+      .insert(newRack)
+      .into('ru_racks')
+      .returning('*')
+      .then(([rack]) => rack)
+      .then((rack) => RacksService.getById(db, userId, rack.rack_id));
+  },
   serializeRack(rack) {
     return {
       rack_id: rack.rack_id,

@@ -2,7 +2,7 @@ const knex = require('knex');
 const app = require('../src/app');
 const helpers = require('./test-helpers');
 
-describe.only('Racks Endpoints', function () {
+describe('Racks Endpoints', function () {
   let db;
 
   const { testUsers, testRacks } = helpers.makeRacksFixtures();
@@ -122,6 +122,60 @@ describe.only('Racks Endpoints', function () {
             expect(res.body.rack_name).to.eql(expectedRack.rack_name);
           });
       });
+    });
+  });
+
+  describe(`POST /api/racks`, () => {
+    beforeEach('insert articles', () =>
+      helpers.seedRacksTables(db, testUsers, testRacks)
+    );
+
+    it(`responds with 400 and an error message when the 'rack_name' is missing`, () => {
+      const newRack = {};
+
+      return supertest(app)
+        .post('/api/racks')
+        .set('Authorization', helpers.makeAuthHeader(testUser))
+        .send(newRack)
+        .expect(400, {
+          error: `Missing 'rack_name' in request body`,
+        });
+    });
+
+    it(`creates a rack, responding with 201 and the new rack`, function () {
+      this.retries(3);
+      const newRack = {
+        rack_name: 'Test new rack',
+      };
+
+      return supertest(app)
+        .post('/api/racks')
+        .set('Authorization', helpers.makeAuthHeader(testUser))
+        .send(newRack)
+        .expect(201)
+        .expect((res) => {
+          expect(res.body).to.have.property('rack_id');
+          expect(res.body.rack_name).to.eql(newRack.rack_name);
+          expect(res.body.user_id).to.eql(testUser.id);
+          expect(res.headers.location).to.eql(`/api/racks/${res.body.rack_id}`);
+          const expectedDate = new Date().toLocaleString();
+          const actualDate = new Date(res.body.created_at).toLocaleString();
+          expect(actualDate).to.eql(expectedDate);
+        })
+        .expect((res) =>
+          db
+            .from('ru_racks')
+            .select('*')
+            .where({ rack_id: res.body.rack_id })
+            .first()
+            .then((row) => {
+              expect(row.rack_name).to.eql(newRack.rack_name);
+              expect(row.user_id).to.eql(testUser.id);
+              const expectedDate = new Date().toLocaleString();
+              const actualDate = new Date(row.created_at).toLocaleString();
+              expect(actualDate).to.eql(expectedDate);
+            })
+        );
     });
   });
 });
