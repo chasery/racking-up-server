@@ -2,7 +2,7 @@ const knex = require('knex');
 const app = require('../src/app');
 const helpers = require('./test-helpers');
 
-describe('Racks Endpoints', function () {
+describe.only('Racks Endpoints', function () {
   let db;
 
   const { testUsers, testRacks } = helpers.makeRacksFixtures();
@@ -41,7 +41,9 @@ describe('Racks Endpoints', function () {
       );
 
       it("responds with 200 and only the userId's racks", () => {
-        const expectedRacks = helpers.makeExpectedRacks(testUser, testRacks);
+        const expectedRacks = testRacks
+          .filter((rack) => rack.user_id === testUser.id)
+          .map((rack) => helpers.makeExpectedRack(rack));
 
         return supertest(app)
           .get('/api/racks')
@@ -49,5 +51,39 @@ describe('Racks Endpoints', function () {
           .expect(200, expectedRacks);
       });
     });
+
+    context(`Given an XSS attack article`, () => {
+      const { maliciousRack, expectedRack } = helpers.makeMaliciousRack(
+        testUser
+      );
+
+      beforeEach('insert malicious article', () => {
+        return helpers.seedMaliciousRack(db, testUser, maliciousRack);
+      });
+
+      it('removes XSS attack content', () => {
+        return supertest(app)
+          .get('/api/racks')
+          .set('Authorization', helpers.makeAuthHeader(testUser))
+          .expect(200)
+          .expect((res) => {
+            expect(res.body[0].rack_name).to.eql(expectedRack.rack_name);
+          });
+      });
+    });
   });
+
+  // describe.only(`GET /api/racks/:rackId`, () => {
+  //   context(`Given no racks`, () => {
+  //     beforeEach(() => helpers.seedUsers(db, testUsers));
+
+  //     it(`responds with 404`, () => {
+  //       const rackId = 123456;
+  //       return supertest(app)
+  //         .get(`/api/racks/${rackId}`)
+  //         .set('Authorization', helpers.makeAuthHeader(testUser))
+  //         .expect(404, { error: `Rack doesn't exist` });
+  //     });
+  //   });
+  // });
 });

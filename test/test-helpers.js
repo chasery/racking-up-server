@@ -62,15 +62,13 @@ function makeRacksArray() {
   ];
 }
 
-function makeExpectedRacks(user, racks) {
-  return racks
-    .filter((rack) => rack.user_id === user.id)
-    .map((rack) => ({
-      rack_id: rack.rack_id,
-      rack_name: rack.rack_name,
-      user_id: rack.user_id,
-      created_at: rack.created_at.toISOString(),
-    }));
+function makeExpectedRack(rack) {
+  return {
+    rack_id: rack.rack_id,
+    rack_name: rack.rack_name,
+    user_id: rack.user_id,
+    created_at: rack.created_at.toISOString(),
+  };
 }
 
 function makeMaliciousRack(user) {
@@ -81,7 +79,7 @@ function makeMaliciousRack(user) {
     created_at: new Date(),
   };
   const expectedRack = {
-    ...makeExpectedRack([user], maliciousRack),
+    ...makeExpectedRack(maliciousRack),
     rack_name: `Naughty naughty very naughty &lt;script&gt;alert("xss");&lt;/script&gt; Bad image <img src="https://url.to.file.which/does-not.exist">. But not <strong>all</strong> bad.`,
   };
   return {
@@ -126,6 +124,10 @@ function seedRacksTables(db, users, racks = []) {
   });
 }
 
+function seedMaliciousRack(db, user, rack) {
+  return seedUsers(db, [user]).then(() => db.into('ru_racks').insert([rack]));
+}
+
 function cleanTable(db) {
   return db.transaction((trx) =>
     trx
@@ -155,11 +157,12 @@ function makeAuthHeader(user, secret = process.env.JWT_SECRET) {
 module.exports = {
   makeUsersArray,
   makeRacksArray,
-  makeExpectedRacks,
+  makeExpectedRack,
   makeMaliciousRack,
   makeRacksFixtures,
   seedUsers,
   seedRacksTables,
+  seedMaliciousRack,
   cleanTable,
   makeAuthHeader,
 };
