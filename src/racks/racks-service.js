@@ -4,6 +4,11 @@ const RacksService = {
   getUserRacks(db, userId) {
     return db.from('ru_racks').select('*').where('user_id', userId);
   },
+  getById(db, userId, rackId) {
+    return RacksService.getUserRacks(db, userId)
+      .where('rack_id', rackId)
+      .first();
+  },
   serializeRack(rack) {
     return {
       rack_id: rack.rack_id,

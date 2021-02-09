@@ -17,9 +17,9 @@ describe.only('Racks Endpoints', function () {
     app.set('db', db);
   });
 
-  before('Clean users table', () => helpers.cleanTable(db));
+  before('Clean tables', () => helpers.cleanTable(db));
 
-  afterEach('Clean users table', () => helpers.cleanTable(db));
+  afterEach('Clean tables', () => helpers.cleanTable(db));
 
   after('Destroy db connection', () => db.destroy());
 
@@ -73,17 +73,55 @@ describe.only('Racks Endpoints', function () {
     });
   });
 
-  // describe.only(`GET /api/racks/:rackId`, () => {
-  //   context(`Given no racks`, () => {
-  //     beforeEach(() => helpers.seedUsers(db, testUsers));
+  describe(`GET /api/racks/:rack_id`, () => {
+    context(`Given no racks`, () => {
+      beforeEach(() => helpers.seedUsers(db, testUsers));
 
-  //     it(`responds with 404`, () => {
-  //       const rackId = 123456;
-  //       return supertest(app)
-  //         .get(`/api/racks/${rackId}`)
-  //         .set('Authorization', helpers.makeAuthHeader(testUser))
-  //         .expect(404, { error: `Rack doesn't exist` });
-  //     });
-  //   });
-  // });
+      it(`responds with 404`, () => {
+        const rack_id = 123456;
+        return supertest(app)
+          .get(`/api/racks/${rack_id}`)
+          .set('Authorization', helpers.makeAuthHeader(testUser))
+          .expect(404, { error: `Rack doesn't exist` });
+      });
+    });
+
+    context(`Given testUser has racks`, () => {
+      beforeEach('insert racks', () =>
+        helpers.seedRacksTables(db, testUsers, testRacks)
+      );
+
+      it("responds with 200 and only the userId's racks", () => {
+        const rack_id = 1;
+        const expectedRack = helpers.makeExpectedRack(
+          testRacks.find((rack) => rack.rack_id === rack_id)
+        );
+
+        return supertest(app)
+          .get(`/api/racks/${rack_id}`)
+          .set('Authorization', helpers.makeAuthHeader(testUser))
+          .expect(200, expectedRack);
+      });
+    });
+
+    context(`Given an XSS attack article`, () => {
+      const { maliciousRack, expectedRack } = helpers.makeMaliciousRack(
+        testUser
+      );
+
+      beforeEach('insert malicious article', () => {
+        return helpers.seedMaliciousRack(db, testUser, maliciousRack);
+      });
+
+      it('removes XSS attack content', () => {
+        return supertest(app)
+          .get(`/api/racks/${maliciousRack.rack_id}`)
+          .set('Authorization', helpers.makeAuthHeader(testUser))
+          .expect(200)
+          .expect((res) => {
+            expect(res.body.rack_name).to.eql(expectedRack.rack_name);
+          });
+      });
+    });
+  });
 });
