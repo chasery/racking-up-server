@@ -17,6 +17,14 @@ const RacksService = {
       .then(([rack]) => rack)
       .then((rack) => RacksService.getById(db, userId, rack.rack_id));
   },
+  updateRack(db, id, updatedRack) {
+    return db
+      .select('*')
+      .from('ru_racks')
+      .where('rack_id', id)
+      .first()
+      .update(updatedRack);
+  },
   serializeRack(rack) {
     return {
       rack_id: rack.rack_id,

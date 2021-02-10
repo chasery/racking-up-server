@@ -126,7 +126,7 @@ describe('Racks Endpoints', function () {
   });
 
   describe(`POST /api/racks`, () => {
-    beforeEach('insert articles', () =>
+    beforeEach('insert racks', () =>
       helpers.seedRacksTables(db, testUsers, testRacks)
     );
 
@@ -176,6 +176,114 @@ describe('Racks Endpoints', function () {
               expect(actualDate).to.eql(expectedDate);
             })
         );
+    });
+  });
+
+  describe('PATCH /api/racks/:rack_id', () => {
+    context('Given no racks', () => {
+      beforeEach(() => helpers.seedUsers(db, testUsers));
+
+      it('responds with a 404', () => {
+        const rack_id = 123456;
+        const updateToRack = {
+          rack_name: 'BEET IT',
+        };
+
+        return supertest(app)
+          .patch(`/api/racks/${rack_id}`)
+          .set('Authorization', helpers.makeAuthHeader(testUser))
+          .send(updateToRack)
+          .expect(404, { error: "Rack doesn't exist" });
+      });
+    });
+
+    context('Given there are racks', () => {
+      beforeEach('insert racks', () =>
+        helpers.seedRacksTables(db, testUsers, testRacks)
+      );
+
+      it('responds with 204 and rack is updated', () => {
+        const rack_id = 1;
+        const updateToRack = {
+          rack_name: 'BEET IT',
+        };
+        let expectedRack = helpers.makeExpectedRack(testRacks[rack_id - 1]);
+        expectedRack = {
+          ...expectedRack,
+          ...updateToRack,
+        };
+
+        return supertest(app)
+          .patch(`/api/racks/${rack_id}`)
+          .set('Authorization', helpers.makeAuthHeader(testUser))
+          .send(updateToRack)
+          .expect(204)
+          .then((res) =>
+            supertest(app)
+              .get(`/api/racks/${rack_id}`)
+              .set('Authorization', helpers.makeAuthHeader(testUser))
+              .expect(expectedRack)
+          );
+      });
+
+      it('rsponds with 204 and ignores bad key value pair', () => {
+        const rack_id = 1;
+        const updateToRack = {
+          rack_name: 'BEET IT',
+        };
+        let expectedRack = helpers.makeExpectedRack(testRacks[rack_id - 1]);
+        expectedRack = {
+          ...expectedRack,
+          ...updateToRack,
+        };
+
+        return supertest(app)
+          .patch(`/api/racks/${rack_id}`)
+          .set('Authorization', helpers.makeAuthHeader(testUser))
+          .send({
+            ...updateToRack,
+            fieldToIgnore: 'this should not be in the GET response',
+          })
+          .expect(204)
+          .then((res) =>
+            supertest(app)
+              .get(`/api/racks/${rack_id}`)
+              .set('Authorization', helpers.makeAuthHeader(testUser))
+              .expect(expectedRack)
+          );
+      });
+
+      it('responds with 400 when no required fields supplied', () => {
+        const rack_id = 1;
+
+        return supertest(app)
+          .patch(`/api/racks/${rack_id}`)
+          .set('Authorization', helpers.makeAuthHeader(testUser))
+          .send({ irrelevantField: 'foo' })
+          .expect(400, {
+            error: "Missing 'rack_name' in request body",
+          });
+      });
+
+      it('responds with 404 when rack user_id !== auth user_id', () => {
+        const rack_id = 4;
+        const updateToRack = {
+          rack_name: 'BEET IT',
+        };
+        let expectedRack = helpers.makeExpectedRack(testRacks[rack_id - 1]);
+        expectedRack = {
+          ...expectedRack,
+          ...updateToRack,
+        };
+
+        return supertest(app)
+          .patch(`/api/racks/${rack_id}`)
+          .set('Authorization', helpers.makeAuthHeader(testUser))
+          .send(updateToRack)
+          .expect(404, {
+            error: `Rack doesn't exist`,
+          });
+      });
     });
   });
 });

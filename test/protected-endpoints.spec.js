@@ -45,6 +45,11 @@ describe('Protected endpoints', function () {
       path: '/api/racks',
       method: supertest(app).post,
     },
+    {
+      name: 'PATCH /api/racks/:rack_id',
+      path: '/api/racks/1',
+      method: supertest(app).patch,
+    },
   ];
 
   protectedEndpoints.forEach((endpoint) => {
