@@ -286,4 +286,45 @@ describe('Racks Endpoints', function () {
       });
     });
   });
+
+  describe('DELETE /api/racks/:rack_id', () => {
+    context('Given no racks', () => {
+      beforeEach(() => helpers.seedUsers(db, testUsers));
+
+      it('responds with 404', () => {
+        const rack_id = 123456;
+
+        return supertest(app)
+          .delete(`/api/racks/${rack_id}`)
+          .set('Authorization', helpers.makeAuthHeader(testUser))
+          .expect(404, { error: "Rack doesn't exist" });
+      });
+    });
+
+    context('Given there are racks', () => {
+      beforeEach('insert racks', () =>
+        helpers.seedRacksTables(db, testUsers, testRacks)
+      );
+
+      it('responds with 204 and the folder is deleted in the db', () => {
+        const rack_id = 1;
+        const expectedRacks = testRacks
+          .filter(
+            (rack) => rack.rack_id !== rack_id && rack.user_id === testUser.id
+          )
+          .map((rack) => helpers.makeExpectedRack(rack));
+
+        return supertest(app)
+          .delete(`/api/racks/${rack_id}`)
+          .set('Authorization', helpers.makeAuthHeader(testUser))
+          .expect(204)
+          .then((res) =>
+            supertest(app)
+              .get('/api/racks')
+              .set('Authorization', helpers.makeAuthHeader(testUser))
+              .expect(expectedRacks)
+          );
+      });
+    });
+  });
 });

@@ -60,6 +60,13 @@ racksRouter
         res.status(204).end();
       })
       .catch(next);
+  })
+  .delete((req, res, next) => {
+    RacksService.deleteRack(req.app.get('db'), req.params.rack_id)
+      .then(() => {
+        res.status(204).end();
+      })
+      .catch(next);
   });
 
 async function checkRackExists(req, res, next) {

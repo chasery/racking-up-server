@@ -50,6 +50,11 @@ describe('Protected endpoints', function () {
       path: '/api/racks/1',
       method: supertest(app).patch,
     },
+    {
+      name: 'DELETE /api/racks/:rack_id',
+      path: '/api/racks/1',
+      method: supertest(app).delete,
+    },
   ];
 
   protectedEndpoints.forEach((endpoint) => {

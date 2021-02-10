@@ -25,6 +25,14 @@ const RacksService = {
       .first()
       .update(updatedRack);
   },
+  deleteRack(db, id) {
+    return db
+      .select('*')
+      .from('ru_racks')
+      .where('rack_id', id)
+      .first()
+      .delete();
+  },
   serializeRack(rack) {
     return {
       rack_id: rack.rack_id,
