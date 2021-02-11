@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const RacksService = require('./racks-service');
 const { requireAuth } = require('../middleware/jwt-auth');
+const { checkRackExists } = require('../middleware/check-rack-exists');
 
 const racksRouter = express.Router();
 const jsonBodyParser = express.json();
@@ -44,6 +45,7 @@ racksRouter
   .all(checkRackExists)
   .get((req, res) => {
     res.json(RacksService.serializeRack(res.rack));
+    // Do some magic with 401 around unathorized user
   })
   .patch(jsonBodyParser, (req, res, next) => {
     const { rack_name } = req.body;
@@ -54,39 +56,26 @@ racksRouter
         return res.status(400).json({
           error: `Missing '${key}' in request body`,
         });
+    // 401
+    // Do some magic with 401 around unathorized user
 
-    RacksService.updateRack(req.app.get('db'), req.params.rack_id, updatedRack)
+    RacksService.updateRack(
+      req.app.get('db'),
+      req.user.id,
+      req.params.rack_id,
+      updatedRack
+    )
       .then((numRowsAffected) => {
         res.status(204).end();
       })
       .catch(next);
   })
   .delete((req, res, next) => {
-    RacksService.deleteRack(req.app.get('db'), req.params.rack_id)
+    RacksService.deleteRack(req.app.get('db'), req.user.id, req.params.rack_id)
       .then(() => {
         res.status(204).end();
       })
       .catch(next);
   });
-
-async function checkRackExists(req, res, next) {
-  try {
-    const rack = await RacksService.getById(
-      req.app.get('db'),
-      req.user.id,
-      req.params.rack_id
-    );
-
-    if (!rack)
-      return res.status(404).json({
-        error: `Rack doesn't exist`,
-      });
-
-    res.rack = rack;
-    next();
-  } catch (error) {
-    next(error);
-  }
-}
 
 module.exports = racksRouter;
