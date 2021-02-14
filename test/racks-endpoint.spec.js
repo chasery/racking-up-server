@@ -142,7 +142,7 @@ describe('Racks Endpoints', function () {
         });
     });
 
-    it(`creates a rack, responding with 201 and the new rack`, function () {
+    it(`responds with 201 and the new rack`, function () {
       this.retries(3);
       const newRack = {
         rack_name: 'Test new rack',
@@ -265,8 +265,8 @@ describe('Racks Endpoints', function () {
           });
       });
 
-      it('responds with 404 when rack user_id !== auth user_id', () => {
-        const rack_id = 4;
+      it('responds with 401 when rack user_id !== auth user_id', () => {
+        const rack_id = 3;
         const updateToRack = {
           rack_name: 'BEET IT',
         };
@@ -280,8 +280,8 @@ describe('Racks Endpoints', function () {
           .patch(`/api/racks/${rack_id}`)
           .set('Authorization', helpers.makeAuthHeader(testUser))
           .send(updateToRack)
-          .expect(404, {
-            error: `Rack doesn't exist`,
+          .expect(401, {
+            error: `Unauthorized request`,
           });
       });
     });

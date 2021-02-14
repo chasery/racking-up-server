@@ -2,7 +2,7 @@ const express = require('express');
 const path = require('path');
 const RacksService = require('./racks-service');
 const { requireAuth } = require('../middleware/jwt-auth');
-const { checkRackExists } = require('../middleware/check-rack-exists');
+const { validateRackRequest } = require('../middleware/validate-request');
 
 const racksRouter = express.Router();
 const jsonBodyParser = express.json();
@@ -11,7 +11,9 @@ racksRouter
   .route('/')
   .all(requireAuth)
   .get((req, res, next) => {
-    RacksService.getUserRacks(req.app.get('db'), req.user.id)
+    const { id } = req.user;
+
+    RacksService.getUserRacks(req.app.get('db'), id)
       .then((racks) => {
         res.json(racks.map(RacksService.serializeRack));
       })
@@ -29,7 +31,7 @@ racksRouter
 
     newRack.user_id = req.user.id;
 
-    RacksService.insertRack(req.app.get('db'), req.user.id, newRack)
+    RacksService.insertRack(req.app.get('db'), newRack)
       .then((rack) => {
         res
           .status(201)
@@ -42,12 +44,13 @@ racksRouter
 racksRouter
   .route('/:rack_id')
   .all(requireAuth)
-  .all(checkRackExists)
+  .all(validateRackRequest)
   .get((req, res) => {
     res.json(RacksService.serializeRack(res.rack));
-    // Do some magic with 401 around unathorized user
   })
   .patch(jsonBodyParser, (req, res, next) => {
+    const { id } = req.user;
+    const { rack_id } = req.params;
     const { rack_name } = req.body;
     const updatedRack = { rack_name };
 
@@ -56,22 +59,18 @@ racksRouter
         return res.status(400).json({
           error: `Missing '${key}' in request body`,
         });
-    // 401
-    // Do some magic with 401 around unathorized user
 
-    RacksService.updateRack(
-      req.app.get('db'),
-      req.user.id,
-      req.params.rack_id,
-      updatedRack
-    )
+    RacksService.updateRack(req.app.get('db'), id, rack_id, updatedRack)
       .then((numRowsAffected) => {
         res.status(204).end();
       })
       .catch(next);
   })
   .delete((req, res, next) => {
-    RacksService.deleteRack(req.app.get('db'), req.user.id, req.params.rack_id)
+    const { id } = req.user;
+    const { rack_id } = req.params;
+
+    RacksService.deleteRack(req.app.get('db'), id, rack_id)
       .then(() => {
         res.status(204).end();
       })

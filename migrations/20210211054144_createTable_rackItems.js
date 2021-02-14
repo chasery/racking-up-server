@@ -3,7 +3,7 @@ exports.up = function (knex) {
     table.increments('item_id');
     table.string('item_name', 255).notNullable();
     table.decimal('item_price', 14, 2).notNullable();
-    table.string('item_url', 255);
+    table.string('item_url', 1000);
     table.integer('user_id').unsigned().notNullable();
     table
       .foreign('user_id')

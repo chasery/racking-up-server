@@ -4,23 +4,16 @@ const RacksService = {
   getUserRacks(db, userId) {
     return db.from('ru_racks').select('*').where('user_id', userId);
   },
-  verifyRackExists(db, rackId) {
-    return db.from('ru_racks').count(1).where({ rack_id: rackId });
+  getUserRack(db, rackId) {
+    return db.from('ru_racks').select('*').where({ rack_id: rackId }).first();
   },
-  getById(db, userId, rackId) {
-    return db
-      .from('ru_racks')
-      .select('*')
-      .where({ rack_id: rackId, user_id: userId })
-      .first();
-  },
-  insertRack(db, userId, newRack) {
+  insertRack(db, newRack) {
     return db
       .insert(newRack)
       .into('ru_racks')
       .returning('*')
       .then(([rack]) => rack)
-      .then((rack) => RacksService.getById(db, userId, rack.rack_id));
+      .then((rack) => RacksService.getUserRack(db, rack.rack_id));
   },
   updateRack(db, userId, rackId, updatedRack) {
     return db
