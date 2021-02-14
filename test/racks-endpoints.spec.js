@@ -25,7 +25,7 @@ describe('Racks Endpoints', function () {
 
   describe(`GET /api/racks`, () => {
     context(`Given testUser has no racks`, () => {
-      beforeEach('insert racks', () => helpers.seedUsers(db, testUsers));
+      beforeEach('insert users', () => helpers.seedUsers(db, testUsers));
 
       it(`responds with 200 and no racks for userId`, () => {
         return supertest(app)
