@@ -8,9 +8,33 @@ const jsonBodyParser = express.json();
 
 rackItemsRouter
   .route('/')
-  .all(requireAuth)
-  .get((req, res, next) => {
-    res.json([]);
+  .post(requireAuth, jsonBodyParser, (req, res, next) => {
+    const { id } = req.user;
+    const { item_name, item_url, item_price, rack_id } = req.body;
+    const newRackItem = { item_name, item_price, rack_id };
+
+    for (const [key, value] of Object.entries(newRackItem))
+      if (value == null)
+        return res.status(400).json({
+          error: `Missing '${key}' in request body`,
+        });
+
+    newRackItem.item_url = item_url;
+    newRackItem.user_id = id;
+
+    RackItemsService.insertRackItem(req.app.get('db'), newRackItem)
+      .then((item) => {
+        res
+          .status(201)
+          .location(path.posix.join(req.originalUrl, `/${item.item_id}`))
+          .json(RackItemsService.serializeRackItem(item));
+      })
+      .catch(next);
   });
+
+// rackItemsRouter
+//   .route('/:rack-item-id')
+//   .all(requireAuth)
+//   .get((req, res, next) => {});
 
 module.exports = rackItemsRouter;

@@ -23,53 +23,78 @@ describe('Racks Endpoints', function () {
 
   after('Destroy db connection', () => db.destroy());
 
-  describe(`GET /api/rack-items`, () => {
-    context.only(`Given testUser has no rack items`, () => {
-      beforeEach('insert users', () => helpers.seedUsers(db, testUsers));
+  describe.only(`POST /api/rack-items`, () => {
+    beforeEach('insert racks', () =>
+      helpers.seedRacksTables(db, testUsers, testRacks, testRackItems)
+    );
 
-      it(`responds with 200 and no racks for userId`, () => {
-        return supertest(app)
-          .get('/api/rack-items')
-          .set('Authorization', helpers.makeAuthHeader(testUser))
-          .expect(200, []);
-      });
-    });
+    const requiredFields = ['item_name', 'item_price', 'rack_id'];
 
-    context(`Given testUser has rack items`, () => {
-      beforeEach('insert racks', () =>
-        helpers.seedRacksTables(db, testUsers, testRacks)
-      );
+    requiredFields.forEach((field) => {
+      const newRackItem = {
+        item_name: 'Beets Sweater',
+        item_price: 39.99,
+        rack_id: 1,
+      };
 
-      it("responds with 200 and only the userId's racks", () => {
-        const expectedRacks = testRacks
-          .filter((rack) => rack.user_id === testUser.id)
-          .map((rack) => helpers.makeExpectedRack(rack));
+      it(`responds with 400 and an error message when the '${field}' is missing`, () => {
+        delete newRackItem[field];
 
         return supertest(app)
-          .get('/api/racks')
+          .post('/api/rack-items')
           .set('Authorization', helpers.makeAuthHeader(testUser))
-          .expect(200, expectedRacks);
-      });
-    });
-
-    context(`Given an XSS attack article`, () => {
-      const { maliciousRack, expectedRack } = helpers.makeMaliciousRack(
-        testUser
-      );
-
-      beforeEach('insert malicious article', () => {
-        return helpers.seedMaliciousRack(db, testUser, maliciousRack);
-      });
-
-      it('removes XSS attack content', () => {
-        return supertest(app)
-          .get('/api/racks')
-          .set('Authorization', helpers.makeAuthHeader(testUser))
-          .expect(200)
-          .expect((res) => {
-            expect(res.body[0].rack_name).to.eql(expectedRack.rack_name);
+          .send(newRackItem)
+          .expect(400, {
+            error: `Missing '${field}' in request body`,
           });
       });
+    });
+
+    it(`responds with 201 and the new rack`, function () {
+      this.retries(3);
+      const newRackItem = {
+        item_name: 'Beets Sweater',
+        item_price: 39.99,
+        item_url: 'https://www.beet-sweaters.com/beet-sweater-1',
+        rack_id: 1,
+      };
+
+      return supertest(app)
+        .post('/api/rack-items')
+        .set('Authorization', helpers.makeAuthHeader(testUser))
+        .send(newRackItem)
+        .expect(201)
+        .expect((res) => {
+          expect(res.body).to.have.property('item_id');
+          expect(res.body.item_name).to.eql(newRackItem.item_name);
+          expect(res.body.item_url).to.eql(newRackItem.item_url);
+          expect(res.body.item_price).to.eql(newRackItem.item_price);
+          expect(res.body.rack_id).to.eql(newRackItem.rack_id);
+          expect(res.body.user_id).to.eql(testUser.id);
+          expect(res.headers.location).to.eql(
+            `/api/rack-items/${res.body.item_id}`
+          );
+          const expectedDate = new Date().toLocaleString();
+          const actualDate = new Date(res.body.created_at).toLocaleString();
+          expect(actualDate).to.eql(expectedDate);
+        })
+        .expect((res) =>
+          db
+            .from('ru_rack_items')
+            .select('*')
+            .where({ item_id: res.body.item_id })
+            .first()
+            .then((row) => {
+              expect(row.item_name).to.eql(newRackItem.item_name);
+              expect(row.item_url).to.eql(newRackItem.item_url);
+              expect(row.item_price).to.eql(newRackItem.item_price);
+              expect(row.rack_id).to.eql(newRackItem.rack_id);
+              expect(row.user_id).to.eql(testUser.id);
+              const expectedDate = new Date().toLocaleString();
+              const actualDate = new Date(row.created_at).toLocaleString();
+              expect(actualDate).to.eql(expectedDate);
+            })
+        );
     });
   });
 });
