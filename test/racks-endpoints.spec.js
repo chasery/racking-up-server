@@ -52,12 +52,12 @@ describe('Racks Endpoints', function () {
       });
     });
 
-    context(`Given an XSS attack article`, () => {
+    context(`Given an XSS attack rack`, () => {
       const { maliciousRack, expectedRack } = helpers.makeMaliciousRack(
         testUser
       );
 
-      beforeEach('insert malicious article', () => {
+      beforeEach('insert malicious rack', () => {
         return helpers.seedRacksTables(db, testUsers, [maliciousRack]);
       });
 
@@ -73,14 +73,14 @@ describe('Racks Endpoints', function () {
     });
   });
 
-  describe(`GET /api/racks/:rack_id`, () => {
+  describe(`GET /api/racks/:rackId`, () => {
     context(`Given no racks`, () => {
       beforeEach(() => helpers.seedUsers(db, testUsers));
 
       it(`responds with 404`, () => {
-        const rack_id = 123456;
+        const rackId = 123456;
         return supertest(app)
-          .get(`/api/racks/${rack_id}`)
+          .get(`/api/racks/${rackId}`)
           .set('Authorization', helpers.makeAuthHeader(testUser))
           .expect(404, { error: `Rack doesn't exist` });
       });
@@ -92,24 +92,24 @@ describe('Racks Endpoints', function () {
       );
 
       it("responds with 200 and only the userId's racks", () => {
-        const rack_id = 1;
+        const rackId = 1;
         const expectedRack = helpers.makeExpectedRack(
-          testRacks.find((rack) => rack.rack_id === rack_id)
+          testRacks.find((rack) => rack.rack_id === rackId)
         );
 
         return supertest(app)
-          .get(`/api/racks/${rack_id}`)
+          .get(`/api/racks/${rackId}`)
           .set('Authorization', helpers.makeAuthHeader(testUser))
           .expect(200, expectedRack);
       });
     });
 
-    context(`Given an XSS attack article`, () => {
+    context(`Given an XSS attack rack`, () => {
       const { maliciousRack, expectedRack } = helpers.makeMaliciousRack(
         testUser
       );
 
-      beforeEach('insert malicious article', () => {
+      beforeEach('insert malicious rack', () => {
         return helpers.seedRacksTables(db, testUsers, [maliciousRack]);
       });
 
@@ -179,18 +179,18 @@ describe('Racks Endpoints', function () {
     });
   });
 
-  describe('PATCH /api/racks/:rack_id', () => {
+  describe('PATCH /api/racks/:rackId', () => {
     context('Given no racks', () => {
       beforeEach(() => helpers.seedUsers(db, testUsers));
 
       it('responds with a 404', () => {
-        const rack_id = 123456;
+        const rackId = 123456;
         const updateToRack = {
           rack_name: 'BEET IT',
         };
 
         return supertest(app)
-          .patch(`/api/racks/${rack_id}`)
+          .patch(`/api/racks/${rackId}`)
           .set('Authorization', helpers.makeAuthHeader(testUser))
           .send(updateToRack)
           .expect(404, { error: "Rack doesn't exist" });
@@ -203,42 +203,42 @@ describe('Racks Endpoints', function () {
       );
 
       it('responds with 204 and rack is updated', () => {
-        const rack_id = 1;
+        const rackId = 1;
         const updateToRack = {
           rack_name: 'BEET IT',
         };
-        let expectedRack = helpers.makeExpectedRack(testRacks[rack_id - 1]);
+        let expectedRack = helpers.makeExpectedRack(testRacks[rackId - 1]);
         expectedRack = {
           ...expectedRack,
           ...updateToRack,
         };
 
         return supertest(app)
-          .patch(`/api/racks/${rack_id}`)
+          .patch(`/api/racks/${rackId}`)
           .set('Authorization', helpers.makeAuthHeader(testUser))
           .send(updateToRack)
           .expect(204)
           .then((res) =>
             supertest(app)
-              .get(`/api/racks/${rack_id}`)
+              .get(`/api/racks/${rackId}`)
               .set('Authorization', helpers.makeAuthHeader(testUser))
               .expect(expectedRack)
           );
       });
 
-      it('rsponds with 204 and ignores bad key value pair', () => {
-        const rack_id = 1;
+      it('responds with 204 and ignores bad key value pair', () => {
+        const rackId = 1;
         const updateToRack = {
           rack_name: 'BEET IT',
         };
-        let expectedRack = helpers.makeExpectedRack(testRacks[rack_id - 1]);
+        let expectedRack = helpers.makeExpectedRack(testRacks[rackId - 1]);
         expectedRack = {
           ...expectedRack,
           ...updateToRack,
         };
 
         return supertest(app)
-          .patch(`/api/racks/${rack_id}`)
+          .patch(`/api/racks/${rackId}`)
           .set('Authorization', helpers.makeAuthHeader(testUser))
           .send({
             ...updateToRack,
@@ -247,17 +247,17 @@ describe('Racks Endpoints', function () {
           .expect(204)
           .then((res) =>
             supertest(app)
-              .get(`/api/racks/${rack_id}`)
+              .get(`/api/racks/${rackId}`)
               .set('Authorization', helpers.makeAuthHeader(testUser))
               .expect(expectedRack)
           );
       });
 
       it('responds with 400 when no required fields supplied', () => {
-        const rack_id = 1;
+        const rackId = 1;
 
         return supertest(app)
-          .patch(`/api/racks/${rack_id}`)
+          .patch(`/api/racks/${rackId}`)
           .set('Authorization', helpers.makeAuthHeader(testUser))
           .send({ irrelevantField: 'foo' })
           .expect(400, {
@@ -266,18 +266,18 @@ describe('Racks Endpoints', function () {
       });
 
       it('responds with 401 when rack user_id !== auth user_id', () => {
-        const rack_id = 3;
+        const rackId = 3;
         const updateToRack = {
           rack_name: 'BEET IT',
         };
-        let expectedRack = helpers.makeExpectedRack(testRacks[rack_id - 1]);
+        let expectedRack = helpers.makeExpectedRack(testRacks[rackId - 1]);
         expectedRack = {
           ...expectedRack,
           ...updateToRack,
         };
 
         return supertest(app)
-          .patch(`/api/racks/${rack_id}`)
+          .patch(`/api/racks/${rackId}`)
           .set('Authorization', helpers.makeAuthHeader(testUser))
           .send(updateToRack)
           .expect(401, {
@@ -287,15 +287,15 @@ describe('Racks Endpoints', function () {
     });
   });
 
-  describe('DELETE /api/racks/:rack_id', () => {
+  describe('DELETE /api/racks/:rackId', () => {
     context('Given no racks', () => {
       beforeEach(() => helpers.seedUsers(db, testUsers));
 
       it('responds with 404', () => {
-        const rack_id = 123456;
+        const rackId = 123456;
 
         return supertest(app)
-          .delete(`/api/racks/${rack_id}`)
+          .delete(`/api/racks/${rackId}`)
           .set('Authorization', helpers.makeAuthHeader(testUser))
           .expect(404, { error: "Rack doesn't exist" });
       });
@@ -307,15 +307,15 @@ describe('Racks Endpoints', function () {
       );
 
       it('responds with 204 and the folder is deleted in the db', () => {
-        const rack_id = 1;
+        const rackId = 1;
         const expectedRacks = testRacks
           .filter(
-            (rack) => rack.rack_id !== rack_id && rack.user_id === testUser.id
+            (rack) => rack.rack_id !== rackId && rack.user_id === testUser.id
           )
           .map((rack) => helpers.makeExpectedRack(rack));
 
         return supertest(app)
-          .delete(`/api/racks/${rack_id}`)
+          .delete(`/api/racks/${rackId}`)
           .set('Authorization', helpers.makeAuthHeader(testUser))
           .expect(204)
           .then((res) =>

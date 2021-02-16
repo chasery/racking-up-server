@@ -155,4 +155,139 @@ describe('Racks Endpoints', function () {
         );
     });
   });
+
+  describe('PATCH /api/rack-items/:itemId', () => {
+    context('Given no rack items', () => {
+      beforeEach(() => helpers.seedUsers(db, testUsers));
+
+      it('responds with a 404', () => {
+        const itemId = 123456;
+        const updateToRackItem = {
+          item_name: 'Beets Sweater',
+          item_price: 39.99,
+          item_url: 'https://www.beet-sweaters.com/beet-sweater-1',
+        };
+
+        return supertest(app)
+          .patch(`/api/rack-items/${itemId}`)
+          .set('Authorization', helpers.makeAuthHeader(testUser))
+          .send(updateToRackItem)
+          .expect(404, { error: "Rack item doesn't exist" });
+      });
+    });
+
+    context('Given there are rack items', () => {
+      beforeEach('insert racks', () =>
+        helpers.seedRacksTables(db, testUsers, testRacks, testRackItems)
+      );
+
+      const requiredFields = ['item_name', 'item_price'];
+
+      requiredFields.forEach((field) => {
+        const itemId = 1;
+        const updateToRackItem = {
+          item_name: 'Beets Sweater',
+          item_price: 39.99,
+        };
+
+        it(`responds with 400 and an error message when the '${field}' is missing`, () => {
+          delete updateToRackItem[field];
+
+          return supertest(app)
+            .patch(`/api/rack-items/${itemId}`)
+            .set('Authorization', helpers.makeAuthHeader(testUser))
+            .send(updateToRackItem)
+            .expect(400, {
+              error: `Missing '${field}' in request body`,
+            });
+        });
+      });
+
+      it('responds with 204 and rack is updated', () => {
+        const itemId = 1;
+        const updateToRackItem = {
+          item_name: 'Beets Sweater',
+          item_price: 39.99,
+          item_url: 'https://www.beet-sweaters.com/beet-sweater-1',
+        };
+        let expectedRackItem = helpers.makeExpectedRackItem(
+          itemId,
+          testRackItems
+        );
+        expectedRackItem = {
+          ...expectedRackItem,
+          ...updateToRackItem,
+        };
+
+        return supertest(app)
+          .patch(`/api/rack-items/${itemId}`)
+          .set('Authorization', helpers.makeAuthHeader(testUser))
+          .send(updateToRackItem)
+          .expect(204)
+          .then((res) =>
+            supertest(app)
+              .get(`/api/rack-items/${itemId}`)
+              .set('Authorization', helpers.makeAuthHeader(testUser))
+              .expect(expectedRackItem)
+          );
+      });
+
+      it('responds with 204 and ignores bad key value pair', () => {
+        const itemId = 1;
+        const updateToRackItem = {
+          item_name: 'Beets Sweater',
+          item_price: 39.99,
+          item_url: 'https://www.beet-sweaters.com/beet-sweater-1',
+        };
+        let expectedRackItem = helpers.makeExpectedRackItem(
+          itemId,
+          testRackItems
+        );
+        expectedRackItem = {
+          ...expectedRackItem,
+          ...updateToRackItem,
+        };
+
+        return supertest(app)
+          .patch(`/api/rack-items/${itemId}`)
+          .set('Authorization', helpers.makeAuthHeader(testUser))
+          .send({
+            ...updateToRackItem,
+            fieldToIgnore: 'this should not be in the GET response',
+          })
+          .expect(204)
+          .then((res) =>
+            supertest(app)
+              .get(`/api/rack-items/${itemId}`)
+              .set('Authorization', helpers.makeAuthHeader(testUser))
+              .expect(expectedRackItem)
+          );
+      });
+
+      it('responds with 401 when item user_id !== auth user_id', () => {
+        const itemId = 5;
+        const updateToRackItem = {
+          item_name: 'Beets Sweater',
+          item_price: 39.99,
+          item_url: 'https://www.beet-sweaters.com/beet-sweater-1',
+        };
+        let expectedRackItem = helpers.makeExpectedRackItem(
+          itemId,
+          testRackItems
+        );
+        expectedRackItem = {
+          ...expectedRackItem,
+          ...updateToRackItem,
+        };
+
+        return supertest(app)
+          .patch(`/api/rack-items/${itemId}`)
+          .set('Authorization', helpers.makeAuthHeader(testUser))
+          .send(updateToRackItem)
+          .expect(401, {
+            error: `Unauthorized request`,
+          });
+      });
+    });
+  });
 });

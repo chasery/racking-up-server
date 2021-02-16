@@ -39,6 +39,32 @@ rackItemsRouter
   .all(validateRackItemRequest)
   .get((req, res, next) => {
     res.json(RackItemsService.serializeRackItem(res.rackItem));
+  })
+  .patch(jsonBodyParser, (req, res, next) => {
+    const { id } = req.user;
+    const { itemId } = req.params;
+    const { item_name, item_price, item_url } = req.body;
+    const updatedRackItem = { item_name, item_price };
+
+    for (const [key, value] of Object.entries(updatedRackItem))
+      if (value == null)
+        return res.status(400).json({
+          error: `Missing '${key}' in request body`,
+        });
+
+    updatedRackItem.item_url = item_url;
+    updatedRackItem.user_id = id;
+
+    RackItemsService.updateRackItem(
+      req.app.get('db'),
+      id,
+      itemId,
+      updatedRackItem
+    )
+      .then((numRowsAffected) => {
+        res.status(204).end();
+      })
+      .catch(next);
   });
 
 module.exports = rackItemsRouter;

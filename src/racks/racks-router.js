@@ -42,7 +42,7 @@ racksRouter
   });
 
 racksRouter
-  .route('/:rack_id')
+  .route('/:rackId')
   .all(requireAuth)
   .all(validateRackRequest)
   .get((req, res) => {
@@ -50,7 +50,7 @@ racksRouter
   })
   .patch(jsonBodyParser, (req, res, next) => {
     const { id } = req.user;
-    const { rack_id } = req.params;
+    const { rackId } = req.params;
     const { rack_name } = req.body;
     const updatedRack = { rack_name };
 
@@ -60,7 +60,7 @@ racksRouter
           error: `Missing '${key}' in request body`,
         });
 
-    RacksService.updateRack(req.app.get('db'), id, rack_id, updatedRack)
+    RacksService.updateRack(req.app.get('db'), id, rackId, updatedRack)
       .then((numRowsAffected) => {
         res.status(204).end();
       })
@@ -68,9 +68,9 @@ racksRouter
   })
   .delete((req, res, next) => {
     const { id } = req.user;
-    const { rack_id } = req.params;
+    const { rackId } = req.params;
 
-    RacksService.deleteRack(req.app.get('db'), id, rack_id)
+    RacksService.deleteRack(req.app.get('db'), id, rackId)
       .then(() => {
         res.status(204).end();
       })

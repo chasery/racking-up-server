@@ -5,7 +5,7 @@ async function validateRackRequest(req, res, next) {
   try {
     const rack = await RacksService.getRackById(
       req.app.get('db'),
-      req.params.rack_id
+      req.params.rackId
     );
 
     if (!rack)

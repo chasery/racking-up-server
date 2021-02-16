@@ -18,6 +18,14 @@ const RackItemsService = {
         RackItemsService.getRackItemById(db, rackItem.item_id)
       );
   },
+  updateRackItem(db, userId, itemId, updatedRackItem) {
+    return db
+      .from('ru_rack_items')
+      .select('*')
+      .where({ item_id: itemId, user_id: userId })
+      .first()
+      .update(updatedRackItem);
+  },
   serializeRackItem(item) {
     return {
       item_id: item.item_id,
