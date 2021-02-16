@@ -65,6 +65,16 @@ rackItemsRouter
         res.status(204).end();
       })
       .catch(next);
+  })
+  .delete((req, res, next) => {
+    const { id } = req.user;
+    const { itemId } = req.params;
+
+    RackItemsService.deleteRackItem(req.app.get('db'), id, itemId)
+      .then(() => {
+        res.status(204).end();
+      })
+      .catch(next);
   });
 
 module.exports = rackItemsRouter;

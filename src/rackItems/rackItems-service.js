@@ -26,6 +26,14 @@ const RackItemsService = {
       .first()
       .update(updatedRackItem);
   },
+  deleteRackItem(db, userId, itemId) {
+    return db
+      .from('ru_rack_items')
+      .select('*')
+      .where({ item_id: itemId, user_id: userId })
+      .first()
+      .delete();
+  },
   serializeRackItem(item) {
     return {
       item_id: item.item_id,

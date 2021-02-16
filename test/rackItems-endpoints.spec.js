@@ -290,4 +290,40 @@ describe('Racks Endpoints', function () {
       });
     });
   });
+
+  describe('DELETE /api/rack-items/:itemId', () => {
+    context('Given no rack items', () => {
+      beforeEach(() => helpers.seedUsers(db, testUsers));
+
+      it('responds with a 404', () => {
+        const itemId = 123456;
+
+        return supertest(app)
+          .delete(`/api/rack-items/${itemId}`)
+          .set('Authorization', helpers.makeAuthHeader(testUser))
+          .expect(404, { error: "Rack item doesn't exist" });
+      });
+    });
+
+    context('Given there are rack items', () => {
+      beforeEach('insert racks', () =>
+        helpers.seedRacksTables(db, testUsers, testRacks, testRackItems)
+      );
+
+      it('responds with 204 and the item is deleted in the db', () => {
+        const itemId = 1;
+
+        return supertest(app)
+          .delete(`/api/rack-items/${itemId}`)
+          .set('Authorization', helpers.makeAuthHeader(testUser))
+          .expect(204)
+          .then((res) =>
+            supertest(app)
+              .get(`/api/rack-items/${itemId}`)
+              .set('Authorization', helpers.makeAuthHeader(testUser))
+              .expect(404, { error: "Rack item doesn't exist" })
+          );
+      });
+    });
+  });
 });

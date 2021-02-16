@@ -306,7 +306,7 @@ describe('Racks Endpoints', function () {
         helpers.seedRacksTables(db, testUsers, testRacks)
       );
 
-      it('responds with 204 and the folder is deleted in the db', () => {
+      it('responds with 204 and the rack is deleted in the db', () => {
         const rackId = 1;
         const expectedRacks = testRacks
           .filter(
