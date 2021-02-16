@@ -4,7 +4,7 @@ const RacksService = {
   getUserRacks(db, userId) {
     return db.from('ru_racks').select('*').where('user_id', userId);
   },
-  getUserRack(db, rackId) {
+  getRackById(db, rackId) {
     return db.from('ru_racks').select('*').where({ rack_id: rackId }).first();
   },
   insertRack(db, newRack) {
@@ -13,7 +13,7 @@ const RacksService = {
       .into('ru_racks')
       .returning('*')
       .then(([rack]) => rack)
-      .then((rack) => RacksService.getUserRack(db, rack.rack_id));
+      .then((rack) => RacksService.getRackById(db, rack.rack_id));
   },
   updateRack(db, userId, rackId, updatedRack) {
     return db

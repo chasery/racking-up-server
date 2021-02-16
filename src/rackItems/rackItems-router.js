@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const RackItemsService = require('./rackItems-service');
 const { requireAuth } = require('../middleware/jwt-auth');
+const { validateRackItemRequest } = require('../middleware/validate-request');
 
 const rackItemsRouter = express.Router();
 const jsonBodyParser = express.json();
@@ -32,9 +33,12 @@ rackItemsRouter
       .catch(next);
   });
 
-// rackItemsRouter
-//   .route('/:rack-item-id')
-//   .all(requireAuth)
-//   .get((req, res, next) => {});
+rackItemsRouter
+  .route('/:itemId')
+  .all(requireAuth)
+  .all(validateRackItemRequest)
+  .get((req, res, next) => {
+    res.json(RackItemsService.serializeRackItem(res.rackItem));
+  });
 
 module.exports = rackItemsRouter;

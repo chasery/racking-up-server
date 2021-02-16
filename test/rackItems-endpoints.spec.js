@@ -7,6 +7,7 @@ describe('Racks Endpoints', function () {
 
   const { testUsers, testRacks, testRackItems } = helpers.makeRacksFixtures();
   const testUser = testUsers[0];
+  const testRack = testRacks[0];
 
   before('make knex instance', () => {
     db = knex({
@@ -23,7 +24,64 @@ describe('Racks Endpoints', function () {
 
   after('Destroy db connection', () => db.destroy());
 
-  describe.only(`POST /api/rack-items`, () => {
+  describe(`GET /api/rack-items/:itemId`, () => {
+    context(`Given no racks`, () => {
+      beforeEach(() => helpers.seedUsers(db, testUsers));
+
+      it(`responds with 404`, () => {
+        const item_id = 123456;
+        return supertest(app)
+          .get(`/api/rack-items/${item_id}`)
+          .set('Authorization', helpers.makeAuthHeader(testUser))
+          .expect(404, { error: `Rack item doesn't exist` });
+      });
+    });
+
+    context(`Given testUser has racks`, () => {
+      beforeEach('insert racks and items', () =>
+        helpers.seedRacksTables(db, testUsers, testRacks, testRackItems)
+      );
+
+      it("responds with 200 and only the userId's rack item", () => {
+        const item_id = 1;
+        const expectedRackItem = helpers.makeExpectedRackItem(
+          item_id,
+          testRackItems
+        );
+
+        return supertest(app)
+          .get(`/api/rack-items/${item_id}`)
+          .set('Authorization', helpers.makeAuthHeader(testUser))
+          .expect(200, expectedRackItem);
+      });
+    });
+
+    context(`Given an XSS attack rack item`, () => {
+      const {
+        maliciousRackItem,
+        expectedRackItem,
+      } = helpers.makeMaliciousRackItem(testUser, testRack);
+
+      beforeEach('insert malicious rack item', () => {
+        return helpers.seedRacksTables(db, testUsers, testRacks, [
+          maliciousRackItem,
+        ]);
+      });
+
+      it('removes XSS attack content', () => {
+        return supertest(app)
+          .get(`/api/rack-items/${maliciousRackItem.item_id}`)
+          .set('Authorization', helpers.makeAuthHeader(testUser))
+          .expect(200)
+          .expect((res) => {
+            expect(res.body.item_name).to.eql(expectedRackItem.item_name);
+            expect(res.body.item_url).to.eql(expectedRackItem.item_url);
+          });
+      });
+    });
+  });
+
+  describe(`POST /api/rack-items`, () => {
     beforeEach('insert racks', () =>
       helpers.seedRacksTables(db, testUsers, testRacks, testRackItems)
     );

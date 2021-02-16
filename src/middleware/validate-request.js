@@ -1,8 +1,9 @@
 const RacksService = require('../racks/racks-service');
+const RackItemsService = require('../rackItems/rackItems-service');
 
 async function validateRackRequest(req, res, next) {
   try {
-    const rack = await RacksService.getUserRack(
+    const rack = await RacksService.getRackById(
       req.app.get('db'),
       req.params.rack_id
     );
@@ -23,6 +24,30 @@ async function validateRackRequest(req, res, next) {
   }
 }
 
+async function validateRackItemRequest(req, res, next) {
+  try {
+    const rackItem = await RackItemsService.getRackItemById(
+      req.app.get('db'),
+      req.params.itemId
+    );
+
+    if (!rackItem)
+      return res.status(404).json({
+        error: `Rack item doesn't exist`,
+      });
+    else if (rackItem.user_id !== req.user.id)
+      return res.status(401).json({
+        error: 'Unauthorized request',
+      });
+
+    res.rackItem = rackItem;
+    next();
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   validateRackRequest,
+  validateRackItemRequest,
 };

@@ -58,7 +58,7 @@ describe('Racks Endpoints', function () {
       );
 
       beforeEach('insert malicious article', () => {
-        return helpers.seedMaliciousRack(db, testUser, maliciousRack);
+        return helpers.seedRacksTables(db, testUsers, [maliciousRack]);
       });
 
       it('removes XSS attack content', () => {
@@ -110,7 +110,7 @@ describe('Racks Endpoints', function () {
       );
 
       beforeEach('insert malicious article', () => {
-        return helpers.seedMaliciousRack(db, testUser, maliciousRack);
+        return helpers.seedRacksTables(db, testUsers, [maliciousRack]);
       });
 
       it('removes XSS attack content', () => {
