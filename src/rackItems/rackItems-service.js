@@ -40,8 +40,6 @@ const RackItemsService = {
       item_name: xss(item.item_name),
       item_price: parseFloat(item.item_price), // PG has a default return of type string for 64-bit integers
       item_url: xss(item.item_url),
-      user_id: item.user_id,
-      rack_id: item.rack_id,
       created_at: new Date(item.created_at),
     };
   },

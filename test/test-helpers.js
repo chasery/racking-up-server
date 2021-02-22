@@ -38,7 +38,7 @@ function makeRacksArray() {
     {
       rack_id: 2,
       rack_name: "Magician's Outfit",
-      user_id: 2,
+      user_id: 1,
       created_at: new Date('2029-01-22T16:28:32.615Z'),
     },
     {
@@ -88,7 +88,7 @@ function makeRackItemsArray() {
       item_price: 79.99,
       item_url:
         'https://www.amazon.com/dp/B008IM5EG2/ref=redir_mobile_desktop?_encoding=UTF8&aaxitk=6Wfq89GEa2nskTMFGpgo1A&hsa_cr_id=2398680170101&pd_rd_r=43a10f8a-b591-4b4a-bd3b-3a2d53aabc34&pd_rd_w=9oj8B&pd_rd_wg=xZlQE&ref_=sbx_be_s_sparkle_tsld_asin_0',
-      user_id: 2,
+      user_id: 1,
       rack_id: 2,
       created_at: new Date('2029-01-22T16:28:32.615Z'),
     },
@@ -105,39 +105,32 @@ function makeRackItemsArray() {
   ];
 }
 
-function makeExpectedRack(rack) {
+function makeExpectedRack(rack, rackItems = []) {
   return {
     rack_id: rack.rack_id,
     rack_name: rack.rack_name,
     user_id: rack.user_id,
     created_at: rack.created_at.toISOString(),
+    items: rackItems,
   };
 }
 
-function makeExpectedRackItem(itemId, rackItems) {
-  const expectedRackItem = rackItems
-    .filter((item) => item.item_id === itemId)
-    .map((item) => {
-      return {
-        item_id: item.item_id,
-        item_name: item.item_name,
-        item_price: item.item_price,
-        item_url: item.item_url,
-        user_id: item.user_id,
-        rack_id: item.rack_id,
-        created_at: item.created_at.toISOString(),
-      };
-    });
-
-  return expectedRackItem[0];
+function makeExpectedRackItem(item) {
+  return {
+    item_id: item.item_id,
+    item_name: item.item_name,
+    item_price: parseFloat(item.item_price),
+    item_url: item.item_url,
+    created_at: item.created_at.toISOString(),
+  };
 }
 
 function makeMaliciousRack(user) {
   const maliciousRack = {
     rack_id: 911,
     rack_name: `Naughty naughty very naughty <script>alert("xss");</script> Bad image <img src="https://url.to.file.which/does-not.exist" onerror="alert(document.cookie);">. But not <strong>all</strong> bad.`,
-    user_id: user.id,
     created_at: new Date(),
+    user_id: user.id,
   };
   const expectedRack = {
     ...makeExpectedRack(maliciousRack),
@@ -160,7 +153,7 @@ function makeMaliciousRackItem(user, rack) {
     created_at: new Date(),
   };
   const expectedRackItem = {
-    ...makeExpectedRack(maliciousRackItem),
+    ...makeExpectedRackItem(maliciousRackItem),
     item_name:
       'Naughty naughty very naughty &lt;script&gt;alert("xss");&lt;/script&gt;',
     item_url: `Bad image <img src="https://url.to.file.which/does-not.exist">. But not <strong>all</strong> bad.`,

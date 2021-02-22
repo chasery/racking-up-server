@@ -8,6 +8,7 @@ describe('Racks Endpoints', function () {
   const { testUsers, testRacks, testRackItems } = helpers.makeRacksFixtures();
   const testUser = testUsers[0];
   const testRack = testRacks[0];
+  const testRackItem = testRackItems[0];
 
   before('make knex instance', () => {
     db = knex({
@@ -45,8 +46,7 @@ describe('Racks Endpoints', function () {
       it("responds with 200 and only the userId's rack item", () => {
         const item_id = 1;
         const expectedRackItem = helpers.makeExpectedRackItem(
-          item_id,
-          testRackItems
+          testRackItems.find((item) => item.item_id === item_id)
         );
 
         return supertest(app)
@@ -108,7 +108,7 @@ describe('Racks Endpoints', function () {
       });
     });
 
-    it(`responds with 201 and the new rack`, function () {
+    it(`responds with 201 and the new rack item`, function () {
       this.retries(3);
       const newRackItem = {
         item_name: 'Beets Sweater',
@@ -123,12 +123,11 @@ describe('Racks Endpoints', function () {
         .send(newRackItem)
         .expect(201)
         .expect((res) => {
+          console.log(res.body);
           expect(res.body).to.have.property('item_id');
           expect(res.body.item_name).to.eql(newRackItem.item_name);
           expect(res.body.item_url).to.eql(newRackItem.item_url);
           expect(res.body.item_price).to.eql(newRackItem.item_price);
-          expect(res.body.rack_id).to.eql(newRackItem.rack_id);
-          expect(res.body.user_id).to.eql(testUser.id);
           expect(res.headers.location).to.eql(
             `/api/rack-items/${res.body.item_id}`
           );
@@ -204,16 +203,13 @@ describe('Racks Endpoints', function () {
       });
 
       it('responds with 204 and rack is updated', () => {
-        const itemId = 1;
+        const itemId = testRackItem.item_id;
         const updateToRackItem = {
           item_name: 'Beets Sweater',
           item_price: 39.99,
           item_url: 'https://www.beet-sweaters.com/beet-sweater-1',
         };
-        let expectedRackItem = helpers.makeExpectedRackItem(
-          itemId,
-          testRackItems
-        );
+        let expectedRackItem = helpers.makeExpectedRackItem(testRackItem);
         expectedRackItem = {
           ...expectedRackItem,
           ...updateToRackItem,
@@ -233,16 +229,13 @@ describe('Racks Endpoints', function () {
       });
 
       it('responds with 204 and ignores bad key value pair', () => {
-        const itemId = 1;
+        const itemId = testRackItem.item_id;
         const updateToRackItem = {
           item_name: 'Beets Sweater',
           item_price: 39.99,
           item_url: 'https://www.beet-sweaters.com/beet-sweater-1',
         };
-        let expectedRackItem = helpers.makeExpectedRackItem(
-          itemId,
-          testRackItems
-        );
+        let expectedRackItem = helpers.makeExpectedRackItem(testRackItem);
         expectedRackItem = {
           ...expectedRackItem,
           ...updateToRackItem,
@@ -272,8 +265,7 @@ describe('Racks Endpoints', function () {
           item_url: 'https://www.beet-sweaters.com/beet-sweater-1',
         };
         let expectedRackItem = helpers.makeExpectedRackItem(
-          itemId,
-          testRackItems
+          testRackItems[itemId - 1]
         );
         expectedRackItem = {
           ...expectedRackItem,

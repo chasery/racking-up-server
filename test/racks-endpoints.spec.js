@@ -5,7 +5,7 @@ const helpers = require('./test-helpers');
 describe('Racks Endpoints', function () {
   let db;
 
-  const { testUsers, testRacks } = helpers.makeRacksFixtures();
+  const { testUsers, testRacks, testRackItems } = helpers.makeRacksFixtures();
   const testUser = testUsers[0];
 
   before('make knex instance', () => {
@@ -37,13 +37,22 @@ describe('Racks Endpoints', function () {
 
     context(`Given testUser has racks`, () => {
       beforeEach('insert racks', () =>
-        helpers.seedRacksTables(db, testUsers, testRacks)
+        helpers.seedRacksTables(db, testUsers, testRacks, testRackItems)
       );
 
       it("responds with 200 and only the userId's racks", () => {
         const expectedRacks = testRacks
           .filter((rack) => rack.user_id === testUser.id)
-          .map((rack) => helpers.makeExpectedRack(rack));
+          .map((rack) => {
+            const expectedRackItems = testRackItems
+              .filter((item) => item.rack_id === rack.rack_id)
+              .map((item) => helpers.makeExpectedRackItem(item));
+
+            return helpers.makeExpectedRack(rack, expectedRackItems);
+          })
+          .sort(function (a, b) {
+            return b.rack_id - a.rack_id;
+          });
 
         return supertest(app)
           .get('/api/racks')
@@ -56,9 +65,18 @@ describe('Racks Endpoints', function () {
       const { maliciousRack, expectedRack } = helpers.makeMaliciousRack(
         testUser
       );
+      const {
+        maliciousRackItem,
+        expectedRackItem,
+      } = helpers.makeMaliciousRackItem(testUser, maliciousRack);
 
       beforeEach('insert malicious rack', () => {
-        return helpers.seedRacksTables(db, testUsers, [maliciousRack]);
+        return helpers.seedRacksTables(
+          db,
+          testUsers,
+          [maliciousRack],
+          [maliciousRackItem]
+        );
       });
 
       it('removes XSS attack content', () => {
@@ -68,6 +86,12 @@ describe('Racks Endpoints', function () {
           .expect(200)
           .expect((res) => {
             expect(res.body[0].rack_name).to.eql(expectedRack.rack_name);
+            expect(res.body[0].items[0].item_name).to.eql(
+              expectedRackItem.item_name
+            );
+            expect(res.body[0].items[0].item_url).to.eql(
+              expectedRackItem.item_url
+            );
           });
       });
     });
@@ -88,13 +112,17 @@ describe('Racks Endpoints', function () {
 
     context(`Given testUser has racks`, () => {
       beforeEach('insert racks', () =>
-        helpers.seedRacksTables(db, testUsers, testRacks)
+        helpers.seedRacksTables(db, testUsers, testRacks, testRackItems)
       );
 
       it("responds with 200 and only the userId's racks", () => {
         const rackId = 1;
+        const expectedRackItems = testRackItems
+          .filter((item) => item.rack_id === rackId)
+          .map((item) => helpers.makeExpectedRackItem(item));
         const expectedRack = helpers.makeExpectedRack(
-          testRacks.find((rack) => rack.rack_id === rackId)
+          testRacks.find((rack) => rack.rack_id === rackId),
+          expectedRackItems
         );
 
         return supertest(app)
@@ -108,9 +136,18 @@ describe('Racks Endpoints', function () {
       const { maliciousRack, expectedRack } = helpers.makeMaliciousRack(
         testUser
       );
+      const {
+        maliciousRackItem,
+        expectedRackItem,
+      } = helpers.makeMaliciousRackItem(testUser, maliciousRack);
 
       beforeEach('insert malicious rack', () => {
-        return helpers.seedRacksTables(db, testUsers, [maliciousRack]);
+        return helpers.seedRacksTables(
+          db,
+          testUsers,
+          [maliciousRack],
+          [maliciousRackItem]
+        );
       });
 
       it('removes XSS attack content', () => {
@@ -120,6 +157,12 @@ describe('Racks Endpoints', function () {
           .expect(200)
           .expect((res) => {
             expect(res.body.rack_name).to.eql(expectedRack.rack_name);
+            expect(res.body.items[0].item_name).to.eql(
+              expectedRackItem.item_name
+            );
+            expect(res.body.items[0].item_url).to.eql(
+              expectedRackItem.item_url
+            );
           });
       });
     });
@@ -157,6 +200,7 @@ describe('Racks Endpoints', function () {
           expect(res.body).to.have.property('rack_id');
           expect(res.body.rack_name).to.eql(newRack.rack_name);
           expect(res.body.user_id).to.eql(testUser.id);
+          expect(res.body.items).to.eql([]);
           expect(res.headers.location).to.eql(`/api/racks/${res.body.rack_id}`);
           const expectedDate = new Date().toLocaleString();
           const actualDate = new Date(res.body.created_at).toLocaleString();
@@ -171,6 +215,7 @@ describe('Racks Endpoints', function () {
             .then((row) => {
               expect(row.rack_name).to.eql(newRack.rack_name);
               expect(row.user_id).to.eql(testUser.id);
+              expect(row.items).to.eql([]);
               const expectedDate = new Date().toLocaleString();
               const actualDate = new Date(row.created_at).toLocaleString();
               expect(actualDate).to.eql(expectedDate);
@@ -303,16 +348,21 @@ describe('Racks Endpoints', function () {
 
     context('Given there are racks', () => {
       beforeEach('insert racks', () =>
-        helpers.seedRacksTables(db, testUsers, testRacks)
+        helpers.seedRacksTables(db, testUsers, testRacks, testRackItems)
       );
 
       it('responds with 204 and the rack is deleted in the db', () => {
         const rackId = 1;
+        const expectedRackItems = testRackItems
+          .filter(
+            (item) => item.rack_id !== rackId && item.user_id === testUser.id
+          )
+          .map((item) => helpers.makeExpectedRackItem(item));
         const expectedRacks = testRacks
           .filter(
             (rack) => rack.rack_id !== rackId && rack.user_id === testUser.id
           )
-          .map((rack) => helpers.makeExpectedRack(rack));
+          .map((rack) => helpers.makeExpectedRack(rack, expectedRackItems));
 
         return supertest(app)
           .delete(`/api/racks/${rackId}`)

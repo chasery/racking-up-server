@@ -7,7 +7,6 @@ async function validateRackRequest(req, res, next) {
       req.app.get('db'),
       req.params.rackId
     );
-
     if (!rack)
       return res.status(404).json({
         error: `Rack doesn't exist`,
