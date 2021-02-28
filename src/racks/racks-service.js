@@ -3,28 +3,34 @@ const { serializeRackItem } = require('../rackItems/rackItems-service');
 
 const RacksService = {
   getUserRacks(db, userId) {
-    return db
-      .from('ru_racks AS racks')
-      .select(
-        'racks.rack_id',
-        'racks.rack_name',
-        'racks.user_id',
-        'racks.created_at',
-        'items.item_id',
-        'items.item_name',
-        'items.item_price',
-        'items.item_url',
-        'items.created_at AS item_created_at'
-      )
-      .leftJoin('ru_rack_items AS items', 'racks.rack_id', 'items.rack_id')
-      .orderBy('racks.rack_id', 'desc')
-      .where('racks.user_id', userId)
-      .then((rackItems) => {
-        if (rackItems) {
-          return RacksService.rackItemsReducer(rackItems);
-        }
-        return [];
-      });
+    return (
+      db
+        .from('ru_racks AS racks')
+        .select(
+          'racks.rack_id',
+          'racks.rack_name',
+          'racks.user_id',
+          'racks.created_at',
+          'items.item_id',
+          'items.item_name',
+          'items.item_price',
+          'items.item_url',
+          'items.created_at AS item_created_at'
+        )
+        .leftJoin('ru_rack_items AS items', 'racks.rack_id', 'items.rack_id')
+        // knex('users').orderBy(['email', { column: 'age', order: 'desc' }])
+        .orderBy([
+          { column: 'racks.rack_id', order: 'desc' },
+          { column: 'item_id', order: 'asc' },
+        ])
+        .where('racks.user_id', userId)
+        .then((rackItems) => {
+          if (rackItems) {
+            return RacksService.rackItemsReducer(rackItems);
+          }
+          return [];
+        })
+    );
   },
   getRackById(db, rackId) {
     return db
@@ -41,6 +47,7 @@ const RacksService = {
         'items.created_at AS item_created_at'
       )
       .leftJoin('ru_rack_items AS items', 'racks.rack_id', 'items.rack_id')
+      .orderBy('item_id', 'asc')
       .where('racks.rack_id', rackId)
       .then((rackItems) => {
         if (rackItems) {
