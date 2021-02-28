@@ -5,6 +5,8 @@ const cors = require('cors');
 const helmet = require('helmet');
 const { NODE_ENV } = require('./config');
 const authRouter = require('./auth/auth-router');
+const racksRouter = require('./racks/racks-router');
+const rackItemsRouter = require('./rackItems/rackItems-router');
 
 const app = express();
 
@@ -15,6 +17,8 @@ app.use(helmet());
 app.use(cors());
 
 app.use('/api/auth', authRouter);
+app.use('/api/racks', racksRouter);
+app.use('/api/rack-items', rackItemsRouter);
 
 app.use(function errorHandler(error, req, res, next) {
   let response;

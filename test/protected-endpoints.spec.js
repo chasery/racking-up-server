@@ -22,13 +22,53 @@ describe('Protected endpoints', function () {
 
   after('Destroy db connection', () => db.destroy());
 
-  beforeEach('insert articles', () => helpers.seedUsers(db, testUsers));
+  beforeEach('insert users', () => helpers.seedUsers(db, testUsers));
 
   const protectedEndpoints = [
     {
       name: 'POST /api/auth/refresh',
       path: '/api/auth/refresh',
       method: supertest(app).post,
+    },
+    {
+      name: 'GET /api/racks',
+      path: '/api/racks',
+      method: supertest(app).get,
+    },
+    {
+      name: 'GET /api/racks/:rackId',
+      path: '/api/racks/1',
+      method: supertest(app).get,
+    },
+    {
+      name: 'POST /api/racks',
+      path: '/api/racks',
+      method: supertest(app).post,
+    },
+    {
+      name: 'PATCH /api/racks/:rackId',
+      path: '/api/racks/1',
+      method: supertest(app).patch,
+    },
+    {
+      name: 'DELETE /api/racks/:rackId',
+      path: '/api/racks/1',
+      method: supertest(app).delete,
+    },
+    {
+      name: 'GET /api/rack-items/:itemId',
+      path: '/api/rack-items/1',
+      method: supertest(app).get,
+    },
+    {
+      name: 'POST /api/rack-items',
+      path: '/api/rack-items',
+      method: supertest(app).post,
+    },
+    {
+      name: 'PATCH /api/rack-items/:itemId',
+      path: '/api/rack-items/1',
+      method: supertest(app).patch,
     },
   ];
 
