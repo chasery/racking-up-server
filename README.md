@@ -17,4 +17,4 @@ Deploy the application `npm run deploy`
 1. Run `npm install` to install required dependencies
 2. Run `npm run migrate` for RU migrations
 3. Run `knex seed:run` to seed RU tables
-4. Run `npm run dev` to run development server
+4. Run `npm run dev` to start development server
