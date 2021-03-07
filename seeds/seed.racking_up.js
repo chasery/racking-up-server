@@ -11,8 +11,8 @@ exports.seed = async function (knex, Promise) {
   // Insert users into table
   await knex('ru_users').insert([
     {
-      email: 'jim.halpert@gmail.com',
-      password: '$2a$12$aH2M3RAplWD8lzMYXRGpROSQRza/d9HICs1qbDPPnHp0o/B9729I.',
+      email: 'jim.halpert@racking-up.com',
+      password: '$2a$12$EYP5KmU/0BjyUeXmqDenJeNHVXZUZYYRK8BaIBYl041Fde2Vwg0dC',
       name: 'Jim',
     },
     {
